@@ -33,10 +33,12 @@
 #ifdef CONFIG_PARAVIRT
 #include <asm/paravirt.h>
 #endif
-
 #include "cpupri.h"
 #include "cpudeadline.h"
 #include "cpuacct.h"
+// --- predication failure handling
+#include "prediction_failure_config.h"
+// --- predication failure handling
 
 #ifdef CONFIG_SCHED_DEBUG
 # define SCHED_WARN_ON(x)	WARN_ONCE(x, #x)
@@ -2048,7 +2050,6 @@ extern void init_rt_rq(struct rt_rq *rt_rq);
 extern void init_pb_rq(struct pb_rq *pb_rq);
 extern void init_dl_rq(struct dl_rq *dl_rq);
 
-
 extern void set_pb_measure_off(struct pb_rq *pb_rq);
 extern void set_pb_measure_on(struct pb_rq *pb_rq);
 extern void set_pb_plan_size(struct pb_rq *pb_rq, unsigned int size);
@@ -2178,3 +2179,68 @@ static inline void cpufreq_update_this_cpu(struct rq *rq, unsigned int flags) {}
 #else /* arch_scale_freq_capacity */
 #define arch_scale_freq_invariant()	(false)
 #endif
+
+// --- prediction failure handling ---
+
+// ----- STRUCT DECLARATION -----
+
+// TASK
+
+#define PLAN_TASK_WAITING 0
+#define PLAN_TASK_RUNNING 1
+#define PLAN_TASK_PREEMPTED 2
+#define PLAN_TASK_SIGNALED 3
+#define PLAN_TASK_FINISHED 4
+#define PLAN_TASK_ABORTED 5
+
+#define SHARES_NO_SLOT 0
+
+typedef struct {
+    long task_id;  // task identifier
+    long process_id; // pid of process task belongs to
+    long instructions_planned; // instructions planned for task
+    long instructions_real; // helper variable for simulating task deviations
+    long instructions_retired_task; // instructions run on task
+    long instructions_retired_slot; // instructions run on original slot of task
+    long lateness; // lateness of task
+    short state; // state of task, see defines for possible values
+    long slot_owner; // ID of task in which current task runs; should be pointer for efficiency, but none trivial with task preemption and moving of tasks in memory
+} PBS_Task;
+
+// PROCESS
+
+typedef struct {
+    long process_id;
+    long num_tasks_remaining; //todo: update
+    long buffer;
+    long lateness;
+    long length_plan;
+    long instructions_retired;
+} PBS_Process;
+
+
+// PLAN
+
+typedef struct {
+    long num_processes;
+    long num_tasks;
+    PBS_Process processes[MAX_NUMBER_PROCESSES] ;
+    PBS_Process tasks[MAX_NUMBER_TASKS_IN_PLAN];
+    PBS_Task* finished_tasks;
+    PBS_Process* cur_process;
+    PBS_Task* cur_task;
+    long lateness;
+    long instructions_retired;
+    short state;
+    long tick_counter;
+    long tasks_finished;
+    long stress;
+	char plan_string [MAX_LEN_PLAN_STR];
+} PBS_Plan;
+
+void fuck_this_shit_around(void);
+void inc_global_task_lateness(void);
+
+
+
+// --- prediction failure handling end ---

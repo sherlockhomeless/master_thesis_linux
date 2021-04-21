@@ -2195,7 +2195,7 @@ static inline void cpufreq_update_this_cpu(struct rq *rq, unsigned int flags) {}
 
 #define SHARES_NO_SLOT 0
 
-typedef struct {
+struct PBS_Task {
     long task_id;  // task identifier
     long process_id; // pid of process task belongs to
     long instructions_planned; // instructions planned for task
@@ -2205,42 +2205,40 @@ typedef struct {
     long lateness; // lateness of task
     short state; // state of task, see defines for possible values
     long slot_owner; // ID of task in which current task runs; should be pointer for efficiency, but none trivial with task preemption and moving of tasks in memory
-} PBS_Task;
+};
 
 // PROCESS
 
-typedef struct {
+struct PBS_Process {
     long process_id;
     long num_tasks_remaining; //todo: update
     long buffer;
     long lateness;
     long length_plan;
     long instructions_retired;
-} PBS_Process;
+};
 
 
 // PLAN
 
-typedef struct {
+struct PBS_Plan{
     long num_processes;
     long num_tasks;
-    PBS_Process processes[MAX_NUMBER_PROCESSES] ;
-    PBS_Process tasks[MAX_NUMBER_TASKS_IN_PLAN];
-    PBS_Task* finished_tasks;
-    PBS_Process* cur_process;
-    PBS_Task* cur_task;
+    struct PBS_Process processes[MAX_NUMBER_PROCESSES] ;
+    struct PBS_Task  tasks[MAX_NUMBER_TASKS_IN_PLAN];
+    struct PBS_Task * finished_tasks;
+    struct PBS_Process* cur_process;
+    struct PBS_Task * cur_task;
     long lateness;
     long instructions_retired;
     short state;
     long tick_counter;
     long tasks_finished;
     long stress;
+	int cur_position_plan_string;
 	char plan_string [MAX_LEN_PLAN_STR];
-} PBS_Plan;
-
-void fuck_this_shit_around(void);
-void inc_global_task_lateness(void);
+};
 
 
-
+struct PBS_Plan* get_pbs_plan(void);
 // --- prediction failure handling end ---

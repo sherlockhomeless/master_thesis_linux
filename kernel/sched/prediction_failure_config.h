@@ -10,9 +10,9 @@
 
 // --- GENERAL ---
 #define INS_PER_SEC 4000000000
-#define INS_PER_TICK (INS_PER_SEC/HZ)
+#define INS_PER_TICK (INS_PER_SEC/PBS_HZ)
 #define RESCHEDULE_DELAY 30
-#define RESCHEDULE_TIME (HZ*RESCHEDULE_DELAY)
+#define RESCHEDULE_TIME (PBS_HZ*RESCHEDULE_DELAY)
 
 // --- T1 ---
 #define MAX_TICKS_OFF 20
@@ -30,6 +30,6 @@
 #define T2_NODE_CHECK_ENABLED 0
 #define FREE_TIME  10 // Factor that stores stretch happening in plan, e.g. free_time = 110, CPU is 110% faster then assumed by plan
 #define ASSIGNABLE_BUFFER 50 // Factor that describes what percentage of the buffer may be used up, e.g. 50 with a 1000 buffer means, that only a buffer of 500 may be used before a prediction failure will be send
-#define STRESS_PER_SIGNAL (HZ*30)
+#define STRESS_PER_SIGNAL (PBS_HZ*30)
 #define STRETCH_CONSTANT 105 // determines how much tasks are stretched by rescheduling
 #define SHRINK_CONSTANT 95 // determines how much tasks are shrunk by rescheduling

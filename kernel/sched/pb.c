@@ -186,6 +186,7 @@ static void task_tick_pb(struct rq *rq, struct task_struct *p, int queued)
 	if (current_mode == PB_EXEC_MODE && next_mode == PB_UALL_MODE)
 	{
 		resched_curr(rq);
+
 	}
 }
 

@@ -1,1 +1,1 @@
-obj-y += test_subdir.o
+obj-y +=  plan.o  task.o  prediction_failure_handling.o  process.o  threshold_checking.o  pb-scheduler.o  pmu_interface.o 

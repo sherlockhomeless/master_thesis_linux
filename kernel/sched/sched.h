@@ -528,6 +528,7 @@ struct plan_entry {
 	u64 uall_time;
 };
 
+// --- PB_CODE_BEGIN ---
 struct pb_rq {
 	struct plan_entry plan[PB_MAX_PLAN_LENGTH];
 	// size of the plan
@@ -548,6 +549,7 @@ struct pb_rq {
 	u64 ktime;
 	u64 start;
 };
+// --- PB_CODE_END ---
 
 /* Real-Time classes' related field in a runqueue: */
 struct rt_rq {
@@ -856,6 +858,7 @@ static inline int cpu_of(struct rq *rq)
 }
 
 
+// --- PB_CODE_BEGIN ---
 // used to determine the next mode of the PB-Scheduler
 // This function is located in sched.h since pb.c and fair.c are using this function
 static inline int determine_next_mode_pb(u64 time,
@@ -864,6 +867,7 @@ static inline int determine_next_mode_pb(u64 time,
 	int mode = PB_DISABLED_MODE;
 	struct pb_rq *pb = &(rq->pb);
 
+	// check if there are pb-tasks to run 
 	if (pb->c_entry < pb->size)
 	{
 		// initial switch
@@ -891,6 +895,7 @@ static inline int determine_next_mode_pb(u64 time,
 	return mode;
 }
 
+// --- PB_CODE_END ---
 
 #ifdef CONFIG_SCHED_SMT
 
@@ -2045,6 +2050,7 @@ print_numa_stats(struct seq_file *m, int node, unsigned long tsf,
 #endif /* CONFIG_NUMA_BALANCING */
 #endif /* CONFIG_SCHED_DEBUG */
 
+// --- PB_CODE_BEGIN ---
 extern void init_cfs_rq(struct cfs_rq *cfs_rq);
 extern void init_rt_rq(struct rt_rq *rt_rq);
 extern void init_pb_rq(struct pb_rq *pb_rq);
@@ -2054,6 +2060,8 @@ extern void set_pb_measure_off(struct pb_rq *pb_rq);
 extern void set_pb_measure_on(struct pb_rq *pb_rq);
 extern void set_pb_plan_size(struct pb_rq *pb_rq, unsigned int size);
 extern void set_pb_plan_entry(struct pb_rq *pb_rq, unsigned int i, u64 exec_time, u64 uall_time);
+
+// --- PB_CODE_END ---
 
 extern void cfs_bandwidth_usage_inc(void);
 extern void cfs_bandwidth_usage_dec(void);

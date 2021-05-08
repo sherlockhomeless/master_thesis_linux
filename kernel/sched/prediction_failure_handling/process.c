@@ -29,7 +29,6 @@ short is_process_late(struct PBS_Process* process){
     else
         return 1;
 }
-
 EXPORT_SYMBOL(is_process_late);
 
 void update_finished_tasks_in_process(struct PBS_Process* process){

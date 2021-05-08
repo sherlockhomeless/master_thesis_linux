@@ -1,44 +1,17 @@
-
-
 #include "sched.h"
+#include "prediction_failure_handling/pb-scheduler.h"
 #include <linux/kthread.h>
 
-void set_pb_measure_on(struct pb_rq *pb)
-{
-	pb->measure_k = PB_MEASURE_K_ON;
-	pb->start = sched_clock();
-	pb->ktime = 0;
-	pb->kstart = 0;
-}
 
-EXPORT_SYMBOL(set_pb_measure_on);
-
-void set_pb_measure_off(struct pb_rq *pb_rq)
-{
-	u64 runtime;
-	u64 stop = sched_clock();
-
-	pb_rq->measure_k = PB_MEASURE_K_OFF;
-	if (stop < pb_rq->start)
-	{
-		printk(KERN_DEBUG "Start is greater than stop. This is a bug!\n");
-	}
-	runtime = stop - pb_rq->start;
-	printk("Measured for %lluus detected ktime of %lluus\n", runtime, pb_rq->ktime);
-
-	pb_rq->ktime = 0;
-	pb_rq->kstart = 0;
-	pb_rq->start = 0;
-}
-
-EXPORT_SYMBOL(set_pb_measure_off);
-
+// set size of plan
 void set_pb_plan_size(struct pb_rq *pb_rq, unsigned int size)
 {
 	pb_rq->size = size;
 }
+
 EXPORT_SYMBOL(set_pb_plan_size);
 
+// sets an entry for the tasks
 void set_pb_plan_entry(struct pb_rq *pb_rq, unsigned int i, u64 exec_time, u64 uall_time)
 {
 	pb_rq->plan[i].exec_time = exec_time;
@@ -64,29 +37,6 @@ void init_pb_rq(struct pb_rq *pb_rq)
 EXPORT_SYMBOL(init_pb_rq);
 
 
-// task enters the runnable state
-static void
-enqueue_task_pb(struct rq *rq, struct task_struct *p, int flags)
-{
-	// NOP
-}
-
-// task exists the runnable state
-static void
-dequeue_task_pb(struct rq *rq, struct task_struct *p, int flags)
-{
-	// NOP
-}
-
-static void yield_task_pb(struct rq *rq)
-{
-	// NOP
-}
-
-static void check_preempt_curr_pb(struct rq *rq, struct task_struct *p, int flags)
-{
-	// NOP
-}
 
 static struct task_struct * pick_next_task_pb(struct rq *rq,
 		struct task_struct *prev, struct rq_flags *rf)
@@ -106,8 +56,10 @@ static struct task_struct * pick_next_task_pb(struct rq *rq,
 	if (current_mode == next_mode)
 	{
 		// continue executing the task in PB_EXEC_MODE
-		if (current_mode == PB_EXEC_MODE)
+		if (current_mode == PB_EXEC_MODE){
+			// run real task here
 			picked = pb->proxy_task;
+		}
 		// in case of PB_UALL_MODE/PB_DISABLED_MODE picked == NULL
 	}
 	// Mode change --> behavior changes
@@ -159,6 +111,7 @@ static struct task_struct * pick_next_task_pb(struct rq *rq,
 		put_prev_task(rq, prev);
 	}
 
+	// RETURN PROCESS TO EXECUTE HERE
 	return picked;
 }
 
@@ -207,6 +160,62 @@ static void switched_to_pb(struct rq *rq, struct task_struct *p)
 }
 
 static void update_curr_pb(struct rq *rq)
+{
+	// NOP
+}
+
+
+
+void set_pb_measure_on(struct pb_rq *pb)
+{
+	pb->measure_k = PB_MEASURE_K_ON;
+	pb->start = sched_clock();
+	pb->ktime = 0;
+	pb->kstart = 0;
+}
+
+EXPORT_SYMBOL(set_pb_measure_on);
+
+void set_pb_measure_off(struct pb_rq *pb_rq)
+{
+	u64 runtime;
+	u64 stop = sched_clock();
+
+	pb_rq->measure_k = PB_MEASURE_K_OFF;
+	if (stop < pb_rq->start)
+	{
+		printk(KERN_DEBUG "Start is greater than stop. This is a bug!\n");
+	}
+	runtime = stop - pb_rq->start;
+	printk("Measured for %lluus detected ktime of %lluus\n", runtime, pb_rq->ktime);
+
+	pb_rq->ktime = 0;
+	pb_rq->kstart = 0;
+	pb_rq->start = 0;
+}
+
+EXPORT_SYMBOL(set_pb_measure_off);
+
+// task enters the runnable state
+static void
+enqueue_task_pb(struct rq *rq, struct task_struct *p, int flags)
+{
+	// NOP
+}
+
+// task exists the runnable state
+static void
+dequeue_task_pb(struct rq *rq, struct task_struct *p, int flags)
+{
+	// NOP
+}
+
+static void yield_task_pb(struct rq *rq)
+{
+	// NOP
+}
+
+static void check_preempt_curr_pb(struct rq *rq, struct task_struct *p, int flags)
 {
 	// NOP
 }

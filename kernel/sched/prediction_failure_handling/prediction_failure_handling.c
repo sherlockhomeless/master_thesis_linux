@@ -24,7 +24,8 @@ void handle_no_preemption_slot_found(struct PBS_Plan *p);
 void signal_t2(struct PBS_Plan* p){
     struct PredictionFailureSignal sig;
     change_plan_state(p, SIGNALED);
-    printk(KERN_ALERT "[PBS_signal_t2]%ld: signaled prediction failure for process %ld", p->tick_counter, p->cur_process->process_id);
+    if (LOG_PBS)
+        printk(KERN_ALERT "[PBS_signal_t2]%ld: signaled prediction failure for process %ld", p->tick_counter, p->cur_process->process_id);
     p->stress = STRESS_PER_SIGNAL;
 
     sig.task_id = p->cur_task->task_id,
@@ -42,7 +43,8 @@ EXPORT_SYMBOL(signal_t2);
 void signal_tm2(struct PBS_Plan* p){
     struct PredictionFailureSignal  sig;
     change_plan_state(p, SIGNALED);
-    printk(KERN_ALERT"[PBS_signal_tm2]%ld: signaled prediction failure for task %ld\n",p->tick_counter, p->cur_task->task_id);
+    if (LOG_PBS)
+        printk(KERN_ALERT"[PBS_signal_tm2]%ld: signaled prediction failure for task %ld\n",p->tick_counter, p->cur_task->task_id);
     p->stress = STRESS_PER_SIGNAL;
 
     sig.task_id = p->cur_task->task_id,
@@ -123,7 +125,8 @@ long find_slot_to_move_to(long target_pid, struct PBS_Plan* p){
         pid = next_slot->process_id;
         state = next_slot->state;
         if (pid == target_pid){
-            printk(KERN_DEBUG "[PBS_find_slot_to_move_to]%ld, found slot %ld for (%ld, %ld)\n",p->tick_counter, counter - 1, p->cur_task->task_id, p->cur_task->process_id);
+            if (LOG_PBS)
+                printk(KERN_DEBUG "[PBS_find_slot_to_move_to]%ld, found slot %ld for (%ld, %ld)\n",p->tick_counter, counter - 1, p->cur_task->task_id, p->cur_task->process_id);
             return counter - 1;
         }
         next_slot++;
@@ -158,8 +161,8 @@ void move_preempted_tasks(long insertion_slot, int stack_size, struct PBS_Task* 
 
     for ( i = 0; i < stack_size; i++){
         *(cur_task + i) = preempted_tasks[i];
-
-        printk(KERN_DEBUG "[PBS_move_preempted_tasks]%ld: Moved (%ld,%ld) in place of (%ld,%ld)\n", p->tick_counter,
+        if (LOG_PBS)
+            printk(KERN_DEBUG "[PBS_move_preempted_tasks]%ld: Moved (%ld,%ld) in place of (%ld,%ld)\n", p->tick_counter,
                cur_task->task_id, cur_task->process_id, task_before.task_id, task_before.process_id);
     }
 
@@ -245,7 +248,8 @@ void reschedule(struct PBS_Plan* p, short signal){
         }
         cur_task++;
     }
-    printk(KERN_DEBUG "[PBS_reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
+    if (LOG_PBS)
+        printk(KERN_DEBUG "[PBS_reschedule]%ld: Received %d signal and stretched/shrunk %ld tasks\n", p->tick_counter, signal, task_counter);
     }
 
 EXPORT_SYMBOL(reschedule);
@@ -326,7 +330,8 @@ short order_is_kept(struct PBS_Plan* p){
         if(cur_task->task_id == -1)
             continue;
         if(cur_task->task_id < last_id[cur_task->process_id]) {
-            printk(KERN_INFO "[PBS_order_is_kept]%ld: %ld is before %ld\n", p->tick_counter, p->cur_task->task_id, last_id[cur_task->process_id]);
+            if (LOG_PBS)
+                printk(KERN_INFO "[PBS_order_is_kept]%ld: %ld is before %ld\n", p->tick_counter, p->cur_task->task_id, last_id[cur_task->process_id]);
             return 0;
         } else {
             last_id[cur_task->process_id] = cur_task->task_id;

@@ -11,19 +11,21 @@
 #include "prediction_failure_handling.h"
 #include "prediction_failure_config.h"
 
-void update(long retired_instructions, struct PBS_Plan *p);
 void schedule_task_finished(struct PBS_Plan*);
 void schedule_timer_tick(struct PBS_Plan*);
 void switch_task(struct PBS_Plan*);
 void handle_free_slot(struct PBS_Plan*);
-
 struct PBS_Plan pbs_plan = {0};
+
 struct PBS_Plan* pbs_plan_ptr = &pbs_plan;
 
+static int times_address_read = 0;
+
 struct PBS_Plan* get_pbs_plan(void){
-    printk(KERN_INFO "[PBS_get_pbs_plan]: pbs_plan_address is %p\n", pbs_plan_ptr);
+    printk(KERN_ALERT "[PBS_get_pbs_plan]: pbs_plan_address is %p, read %d times\n", pbs_plan_ptr, times_address_read);
     if (pbs_plan_ptr == NULL)
         printk(KERN_ALERT "[PBS_get_pbs_plan]: Plan is null\n");
+    times_address_read++;
     return pbs_plan_ptr;
 }
 EXPORT_SYMBOL(get_pbs_plan);
@@ -32,25 +34,26 @@ EXPORT_SYMBOL(get_pbs_plan);
  * Is called by the tick-function after each timer interrupt
  * @param p
  */
-void schedule_pbs(struct PBS_Plan *p) {
+void pbs_handle_prediction_failure(struct PBS_Plan *p) {
     long retired_instructions;
     if (p->cur_task->task_id == -2){
-        printk(KERN_INFO "[PBS_SCHEDULE]%ld finished running p ticks", p->tick_counter);
+        if (LOG_PBS)
+            printk(KERN_INFO "[PBS_SCHEDULE]%ld finished running p ticks", p->tick_counter);
         change_plan_state(p, PLAN_FINISHED);
         return;
     }
     //todo: Just for checking:
     retired_instructions = get_retired_instructions();
-    update(retired_instructions, p);
+    update_retired_instructions(retired_instructions, p);
 
-    if(p->cur_task->state == PLAN_TASK_FINISHED){ // schedule_pbs() was called after a task has finished
+    if(p->cur_task->state == PLAN_TASK_FINISHED){ // pbs_handle_prediction_failure() was called after a task has finished
         schedule_task_finished(p);
     } else {
         schedule_timer_tick(p);
     }
     p->tick_counter++;
 }
-EXPORT_SYMBOL(schedule_pbs);
+EXPORT_SYMBOL(pbs_handle_prediction_failure);
 
 
 /**
@@ -66,9 +69,11 @@ void schedule_task_finished(struct PBS_Plan *p){
     if ( check_tm2_task(p)){
         //TODO: signal tm2
         signal_tm2(p);
-        printk(KERN_WARNING "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished early\n",p->tick_counter, p->cur_task->task_id);
+        if (LOG_PBS)
+            printk(KERN_WARNING "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished early\n",p->tick_counter, p->cur_task->task_id);
     } else {
-        printk(KERN_INFO "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
+        if (LOG_PBS)
+            printk(KERN_INFO "[PBS_schedule_task_finished]%ld: PBS_Task%ld finished, planned: %ld, real: %ld, retired: %ld\n", p->tick_counter, p->cur_task->task_id,
                p->cur_task->instructions_planned, p->cur_task->instructions_real, p->cur_task->instructions_retired_slot);
     }
 
@@ -147,7 +152,7 @@ EXPORT_SYMBOL(switch_task);
  */
 void start_run(struct PBS_Plan *p){
     while (p->state != PLAN_FINISHED){
-        schedule_pbs(p);
+        pbs_handle_prediction_failure(p);
     }
     printk(KERN_EMERG "[PBS_start_run]%ld: Plan finished!", p->tick_counter);
 }
@@ -163,8 +168,8 @@ void handle_free_slot(struct PBS_Plan* p){
     long lateness_node_before,  lateness_node_after;
     struct PBS_Task* free_slot;
 
-
-    printk(KERN_INFO "[PBS_handle_free_slot]%ld: Found free slot of length %ld\n", p->tick_counter, p->cur_task->instructions_planned);
+    if (LOG_PBS)
+        printk(KERN_INFO "[PBS_handle_free_slot]%ld: Found free slot of length %ld\n", p->tick_counter, p->cur_task->instructions_planned);
     lateness_node_before = p->lateness;
     free_slot = p->tasks;
     p->index_cur_task++;
@@ -175,15 +180,3 @@ void handle_free_slot(struct PBS_Plan* p){
 }
 
 EXPORT_SYMBOL(handle_free_slot);
-
-/**
- * Updates ALL data structures to the state including the current tick
- * @param retired_instructions number of instructions retired on the execution of p-tasks since last tick
- * @param p current p
- */
-void update(long retired_instructions, struct PBS_Plan* p){
-    update_retired_instructions(retired_instructions, p);
-    if(LOG_PBS)
-        printk(KERN_INFO "[PBS_update]%ld: (%ld,%ld): instructions_retired_slot: %ld \n", p->tick_counter, p->cur_task->task_id, p->cur_task->process_id, p->cur_task->instructions_retired_slot);
-}
-EXPORT_SYMBOL(update);

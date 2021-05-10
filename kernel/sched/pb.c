@@ -1,7 +1,14 @@
 #include "sched.h"
 #include "prediction_failure_handling/pb-scheduler.h"
+//#include "prediction_failure_handling/pbs_entities.h"
 #include <linux/kthread.h>
 
+// ### Prediciton Failure Handling START ###
+// LKM will replace function pointer by real prediction failure handling
+void (*handle_prediction_failure)(void) = NULL;
+EXPORT_SYMBOL(handle_prediction_failure);
+
+// ### Prediciton Failure Handling START ###
 
 // set size of plan
 void set_pb_plan_size(struct pb_rq *pb_rq, unsigned int size)
@@ -57,9 +64,13 @@ static struct task_struct * pick_next_task_pb(struct rq *rq,
 	{
 		// continue executing the task in PB_EXEC_MODE
 		if (current_mode == PB_EXEC_MODE){
+			if (handle_prediction_failure != NULL){
+				handle_prediction_failure();
+			}
 			// run real task here
 			picked = pb->proxy_task;
 		}
+
 		// in case of PB_UALL_MODE/PB_DISABLED_MODE picked == NULL
 	}
 	// Mode change --> behavior changes

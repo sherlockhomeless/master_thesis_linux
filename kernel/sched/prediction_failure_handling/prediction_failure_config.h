@@ -1,7 +1,7 @@
 
 
 // --- ADMIN STUFF ---
-#define LOG_PBS 1
+#define LOG_PBS 0
 #define MAX_NUMBER_PROCESSES 100
 #define MAX_NUMBER_TASKS_IN_PLAN 400
 #define MAX_LEN_PLAN_STR 20000

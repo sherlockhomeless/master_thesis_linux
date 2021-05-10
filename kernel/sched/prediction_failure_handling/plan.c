@@ -73,7 +73,8 @@ void update_cur_task_process(struct PBS_Plan *p) {
         p->cur_process = &p->processes[p->cur_task->process_id];
     else
         p->cur_process = &p->processes[MAX_NUMBER_PROCESSES -1];
-    printk(KERN_INFO "[PBS_update_cur_task_process]%ld: (%ld,%ld) is new cur_task\n", p->tick_counter,
+    if(LOG_PBS)
+        printk(KERN_INFO "[PBS_update_cur_task_process]%ld: (%ld,%ld) is new cur_task\n", p->tick_counter,
            p->cur_task->task_id, p->cur_task->process_id);
 }
 
@@ -110,7 +111,8 @@ void update_node_lateness(long instructions, struct PBS_Plan* p){
 }
 void change_plan_state(struct PBS_Plan* p, short state){
     p->state = state;
-    printk(KERN_INFO"[PBS_change_plan_state]%ld: changed state %d\n", p->tick_counter, p->state);
+    if (LOG_PBS)
+        printk(KERN_INFO"[PBS_change_plan_state]%ld: changed state %d\n", p->tick_counter, p->state);
 }
 
 void fill_empty_test_plan(struct PBS_Plan* p){

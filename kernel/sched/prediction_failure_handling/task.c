@@ -26,6 +26,7 @@ EXPORT_SYMBOL(pbs_update_retired_instructions_task);
 void change_task_state(struct PBS_Task *t, short state) {
     short state_before = t->state;
     t->state = state;
-    printk(KERN_INFO "[change_task_state] changed task %ld from %d to %d\n", t->task_id, state_before, state);
+    if (LOG_PBS)
+        printk(KERN_INFO "[change_task_state] changed task %ld from %d to %d\n", t->task_id, state_before, state);
 }
 EXPORT_SYMBOL(change_task_state);

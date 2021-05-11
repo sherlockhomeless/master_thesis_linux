@@ -42,7 +42,8 @@ void pbs_handle_prediction_failure(struct PBS_Plan *p) {
         change_plan_state(p, PLAN_FINISHED);
         return;
     }
-    //todo: Just for checking:
+
+    printk(KERN_ERR "[PBS_pbs_handle_prediction_failure]%ld: ran tick, cur_task=%ld", p->tick_counter, p->cur_task->task_id);
     retired_instructions = get_retired_instructions();
     update_retired_instructions(retired_instructions, p);
 

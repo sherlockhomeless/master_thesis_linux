@@ -9,5 +9,4 @@
 long get_retired_instructions(){
     return INS_PER_TICK;
 }
-
 EXPORT_SYMBOL(get_retired_instructions);
